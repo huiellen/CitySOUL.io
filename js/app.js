@@ -95,11 +95,7 @@ function setupEventListeners() {
     });
     document.getElementById('social-service-btn').addEventListener('click', () => setView('social-service'));
     document.getElementById('add-memory-btn').addEventListener('click', handleAddMemory);
-    document.getElementById('mobile-add-memory-btn').addEventListener('click', () => {
-        handleAddMemory();
-        UIModule.toggleMobileMenu(false);
 
-    });
     
     // Mobile navigation
     document.getElementById('mobile-menu-btn').addEventListener('click', UIModule.toggleMobileMenu);
@@ -125,8 +121,7 @@ function setupEventListeners() {
     });
     document.getElementById('mobile-add-memory-btn').addEventListener('click', () => {
         if (AppState.isLoggedIn) {
-            // Show add memory form (to be implemented)
-            alert('Add memory feature coming soon!');
+            handleAddMemory();
             UIModule.toggleMobileMenu(false);
         } else {
             UIModule.toggleLoginModal(true);
