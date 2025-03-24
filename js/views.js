@@ -77,8 +77,9 @@ function setView(view) {
  * @param {boolean} isLoggedIn - Whether the user is logged in
  * @param {Function} backCallback - Callback for back button
  * @param {Function} saveCallback - Callback for save button
+ * @param {Function} deleteCallback - Callback for delete button (only for user-added items)
  */
-function renderItemDetails(item, isSaved, isLoggedIn, backCallback, saveCallback) {
+function renderItemDetails(item, isSaved, isLoggedIn, backCallback, saveCallback, deleteCallback) {
     if (!item || !detailContent) return;
     
     console.log(`Rendering details for item: ${item.title}`);
@@ -101,6 +102,11 @@ function renderItemDetails(item, isSaved, isLoggedIn, backCallback, saveCallback
                         <i class="fas fa-download"></i>
                     </button>
                 ` : ''}
+                ${item.contributor === "User Added" ? `
+                    <button class="p-2 rounded-full bg-red-100 text-red-600" id="delete-item-btn">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                ` : ''}
             </div>
         </div>
         
@@ -112,9 +118,13 @@ function renderItemDetails(item, isSaved, isLoggedIn, backCallback, saveCallback
                 <span class="bg-gray-100 px-2 py-1 rounded">${item.period}</span>
                 <span class="bg-gray-100 px-2 py-1 rounded">${item.district}</span>
                 <span class="bg-gray-100 px-2 py-1 rounded">Contributed by: ${item.contributor}</span>
+                ${item.contributor === "User Added" ? `
+                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">User Created</span>
+                ` : ''}
             </div>
         </div>
         
+        <!-- Rest of the details view remains the same -->
         <!-- Image gallery -->
         <div class="mb-6">
             <div class="grid grid-cols-1 ${item.images.length > 1 ? 'md:grid-cols-2' : ''} gap-4">
@@ -181,11 +191,11 @@ function renderItemDetails(item, isSaved, isLoggedIn, backCallback, saveCallback
         <div>
             <h2 class="text-lg font-semibold mb-2">Tags</h2>
             <div class="flex flex-wrap gap-2">
-                ${item.tags.map(tag => `
+                ${(item.tags && item.tags.length > 0) ? item.tags.map(tag => `
                     <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm">
                         #${tag}
                     </span>
-                `).join('')}
+                `).join('') : '<span class="text-gray-500">No tags</span>'}
             </div>
         </div>
     `;
@@ -200,6 +210,18 @@ function renderItemDetails(item, isSaved, isLoggedIn, backCallback, saveCallback
         if (downloadBtn) {
             downloadBtn.addEventListener('click', () => {
                 alert(`Download functionality for "${item.title}" will be implemented soon.`);
+            });
+        }
+    }
+    
+    // Handle delete button for user-added items
+    if (item.contributor === "User Added") {
+        const deleteBtn = document.getElementById('delete-item-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => {
+                if (confirm(`Are you sure you want to delete "${item.title}"? This cannot be undone.`)) {
+                    deleteCallback(item.id);
+                }
             });
         }
     }
@@ -343,9 +365,14 @@ function renderSavedItems(savedData, viewItemCallback, removeItemCallback, explo
         savedItemsContainer.innerHTML = `
             <div class="flex flex-wrap justify-between items-center mb-4">
                 <span class="text-gray-600 mb-2 sm:mb-0">${savedData.length} items saved</span>
-                <button class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-200 transition">
-                    Export Collection
-                </button>
+                <div class="flex space-x-3">
+                    <button class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-200 transition">
+                        Export Collection
+                    </button>
+                    <button id="clear-custom-memories" class="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-200 transition">
+                        Clear Custom Memories
+                    </button>
+                </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="saved-grid"></div>
         `;
@@ -369,9 +396,16 @@ function renderSavedItems(savedData, viewItemCallback, removeItemCallback, explo
                     </div>
                     <h3 class="text-lg font-medium mt-2 mb-1">${item.title}</h3>
                     <p class="text-gray-500 text-sm mb-3 line-clamp-2">${item.description}</p>
-                    <button class="text-indigo-600 hover:text-indigo-800 text-sm font-medium view-details-btn" data-id="${item.id}">
-                        View Details →
-                    </button>
+                    <div class="flex justify-between items-center">
+                        <button class="text-indigo-600 hover:text-indigo-800 text-sm font-medium view-details-btn" data-id="${item.id}">
+                            View Details →
+                        </button>
+                        ${item.contributor === "User Added" ? `
+                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                User Added
+                            </span>
+                        ` : ''}
+                    </div>
                 </div>
             `;
             
@@ -397,10 +431,22 @@ function renderSavedItems(savedData, viewItemCallback, removeItemCallback, explo
         });
         
         // Add event listener for export button
-        const exportButton = savedItemsContainer.querySelector('button:not(.view-details-btn):not(.remove-saved-btn)');
+        const exportButton = savedItemsContainer.querySelector('button:not(#clear-custom-memories):not(.view-details-btn):not(.remove-saved-btn)');
         if (exportButton) {
             exportButton.addEventListener('click', () => {
                 alert('Export functionality will be implemented soon.');
+            });
+        }
+        
+        // Add event listener for clear custom memories button
+        const clearButton = document.getElementById('clear-custom-memories');
+        if (clearButton) {
+            clearButton.addEventListener('click', () => {
+                if (confirm("Are you sure you want to delete ALL your custom memories? This cannot be undone!")) {
+                    localStorage.removeItem('citysoul-custom-memories');
+                    alert('All custom memories have been cleared. Refresh the page to see changes.');
+                    location.reload();
+                }
             });
         }
     }

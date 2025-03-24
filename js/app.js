@@ -28,6 +28,19 @@ function initApp() {
     console.log('Initializing CitySOUL application...');
     
     // Load saved items from localStorage
+    // Load custom memories from localStorage if available
+    const storedMemories = localStorage.getItem('citysoul-custom-memories');
+    if (storedMemories) {
+        const customMemories = JSON.parse(storedMemories);
+        // Avoid duplicates by only adding memories with IDs that don't exist
+        const existingIds = CULTURAL_DATA.map(item => item.id);
+        customMemories.forEach(memory => {
+            if (!existingIds.includes(memory.id)) {
+                CULTURAL_DATA.push(memory);
+            }
+        });
+        AppState.filteredData = [...CULTURAL_DATA];
+    }
     loadSavedItemsFromStorage();
     
     // Check login status
@@ -81,13 +94,11 @@ function setupEventListeners() {
         }
     });
     document.getElementById('social-service-btn').addEventListener('click', () => setView('social-service'));
-    document.getElementById('add-memory-btn').addEventListener('click', () => {
-        if (AppState.isLoggedIn) {
-            // Show add memory form (to be implemented)
-            alert('Add memory feature coming soon!');
-        } else {
-            UIModule.toggleLoginModal(true);
-        }
+    document.getElementById('add-memory-btn').addEventListener('click', handleAddMemory);
+    document.getElementById('mobile-add-memory-btn').addEventListener('click', () => {
+        handleAddMemory();
+        UIModule.toggleMobileMenu(false);
+
     });
     
     // Mobile navigation
@@ -248,7 +259,8 @@ function handleMarkerClick(item) {
         AppState.savedItems.includes(item.id),
         AppState.isLoggedIn,
         handleBackToMap,
-        toggleSaveItem
+        toggleSaveItem,
+        handleDeleteMemory
     );
     setView('details');
 }
@@ -324,6 +336,95 @@ function toggleSaveItem(itemId) {
         );
     }
 }
+
+/**
+ * Handle add memory button click
+ */
+function handleAddMemory() {
+    if (!AppState.isLoggedIn) {
+        UIModule.toggleLoginModal(true);
+        return;
+    }
+    
+    ViewsModule.showAddMemoryForm(handleAddMemorySubmit, null);
+}
+
+/**
+ * Handle add memory form submission
+ * @param {Object} memoryData - Memory data from form
+ */
+function handleAddMemorySubmit(memoryData) {
+    console.log('Adding new memory:', memoryData);
+    
+    // Create new memory object
+    const newMemory = {
+        id: CULTURAL_DATA.length + 1, // Generate unique ID
+        title: memoryData.title,
+        description: memoryData.description,
+        category: memoryData.category,
+        period: memoryData.period,
+        district: memoryData.district,
+        location: memoryData.location,
+        images: ['images/placeholder.jpg'], // Default image
+        audio: false,
+        tags: memoryData.tags || [],
+        contributor: "User Added"
+    };
+    
+    // Add to data (would be an API call in a real app)
+    CULTURAL_DATA.push(newMemory);
+    AppState.filteredData.push(newMemory);
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('citysoul-custom-memories', 
+        JSON.stringify(CULTURAL_DATA.filter(item => item.contributor === "User Added")));
+    
+    // Update the map with the new point
+    MapModule.renderMapMarkers(AppState.filteredData, handleMarkerClick);
+    
+    // Update results count
+    UIModule.updateResultsCount(AppState.filteredData.length);
+    
+    // Show notification
+    UIModule.showNotification(`Memory "${newMemory.title}" added successfully!`, 'success');
+    
+    // Go back to map view
+    setView('map');
+}
+
+
+/**
+ * Handle memory deletion
+ * @param {number} itemId - ID of the memory to delete
+ */
+function handleDeleteMemory(itemId) {
+    // Remove from main data array
+    const index = CULTURAL_DATA.findIndex(item => item.id === itemId);
+    if (index !== -1) {
+        CULTURAL_DATA.splice(index, 1);
+    }
+    
+    // Remove from filtered data
+    const filteredIndex = AppState.filteredData.findIndex(item => item.id === itemId);
+    if (filteredIndex !== -1) {
+        AppState.filteredData.splice(filteredIndex, 1);
+    }
+    
+    // Update localStorage
+    localStorage.setItem('citysoul-custom-memories', 
+        JSON.stringify(CULTURAL_DATA.filter(item => item.contributor === "User Added")));
+    
+    // Show notification
+    UIModule.showNotification('Memory deleted successfully!', 'success');
+    
+    // Update the map and count
+    MapModule.renderMapMarkers(AppState.filteredData, handleMarkerClick);
+    UIModule.updateResultsCount(AppState.filteredData.length);
+    
+    // Go back to map view
+    setView('map');
+}
+
 
 /**
  * Handle login submission
