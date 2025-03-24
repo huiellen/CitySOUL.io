@@ -1,0 +1,131 @@
+/* map.css - Map-specific styles */
+
+#mapid {
+    flex: 1;
+    height: 100%;
+    min-height: 450px;
+    width: 100%;
+    z-index: 1;
+  }
+  
+  .map-container {
+    flex: 1;
+    position: relative;
+    background-color: #e6f2ff; /* light blue background */
+    min-height: 24rem;
+  }
+  
+  /* Map controls */
+  .map-control {
+    position: absolute;
+    z-index: 20;
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .map-control-top-left {
+    top: 1rem;
+    left: 1rem;
+  }
+  
+  .map-control-top-right {
+    top: 1rem;
+    right: 1rem;
+  }
+  
+  .map-results-count {
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+  }
+  
+  /* Custom markers */
+  .map-point {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    z-index: 10;
+  }
+  
+  .map-point:hover {
+    transform: scale(1.5);
+  }
+  
+  .custom-marker-icon {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Category marker colors */
+  .marker-military {
+    background-color: #34568B; /* navy blue */
+  }
+  
+  .marker-indigenous {
+    background-color: #805ad5; /* purple */
+  }
+  
+  .marker-architecture {
+    background-color: #3182ce; /* blue */
+  }
+  
+  .marker-maritime {
+    background-color: #2C9F45; /* green */
+  }
+  
+  .marker-museum {
+    background-color: #DD4124; /* red-orange */
+  }
+  
+  .marker-natural {
+    background-color: #006B54; /* forest green */
+  }
+  
+  .marker-default {
+    background-color: #718096; /* gray */
+  }
+  
+  /* Custom popup */
+  .custom-popup .leaflet-popup-content-wrapper {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .custom-popup .leaflet-popup-content {
+    margin: 0.75rem;
+  }
+  
+  .popup-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .popup-category {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+  
+  .popup-action {
+    margin-top: 0.5rem;
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  /* Detail view map */
+  #detail-map {
+    height: 16rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
