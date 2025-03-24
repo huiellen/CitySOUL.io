@@ -526,11 +526,11 @@ function renderRelatedItems(relatedItems, itemSelectCallback) {
 function showAddMemoryForm(submitCallback, cancelCallback) {
     // Create a modal with the form
     const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 py-4 overflow-y-auto';
     
     modal.innerHTML = `
-        <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-90vh overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
+        <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 my-auto relative max-h-[85vh] overflow-y-auto scrollbar-thin">
+            <div class="flex justify-between items-center mb-4 sticky top-0 bg-white z-10 pb-2 border-b">
                 <h2 class="text-xl font-bold">Add New Memory</h2>
                 <button id="close-add-memory-btn" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times text-lg"></i>
@@ -604,7 +604,7 @@ function showAddMemoryForm(submitCallback, cancelCallback) {
                     <input type="text" name="tags" class="w-full p-2 border rounded-lg" placeholder="E.g., heritage, history, architecture">
                 </div>
                 
-                <div class="pt-4 flex justify-end space-x-3">
+                <div class="pt-4 flex justify-end space-x-3 sticky bottom-0 bg-white pb-2 border-t mt-6">
                     <button type="button" id="cancel-add-memory-btn" class="px-4 py-2 border rounded-lg hover:bg-gray-100">
                         Cancel
                     </button>
@@ -613,13 +613,16 @@ function showAddMemoryForm(submitCallback, cancelCallback) {
                     </button>
                 </div>
             </form>
+            <div class="scroll-indicator absolute right-3 bottom-20 bg-indigo-500 text-white px-2 py-1 rounded-full opacity-70 text-sm hidden">
+                <i class="fas fa-chevron-down"></i> 滚动查看更多
+            </div>
         </div>
     `;
     
-    // Add modal to body
+    // 添加模态到body
     document.body.appendChild(modal);
     
-    // Initialize the form map
+    // 初始化表单地图
     setTimeout(() => {
         const formMap = L.map('form-map').setView([48.430, -123.430], 13);
         
@@ -628,7 +631,7 @@ function showAddMemoryForm(submitCallback, cancelCallback) {
             attribution: '© OpenStreetMap contributors'
         }).addTo(formMap);
         
-        // Add marker when map is clicked
+        // 点击地图时添加标记
         let marker = null;
         formMap.on('click', function(e) {
             if (marker) {
@@ -637,21 +640,43 @@ function showAddMemoryForm(submitCallback, cancelCallback) {
             
             marker = L.marker(e.latlng).addTo(formMap);
             
-            // Update hidden inputs
+            // 更新隐藏输入
             document.querySelector('input[name="latitude"]').value = e.latlng.lat;
             document.querySelector('input[name="longitude"]').value = e.latlng.lng;
         });
         
-        // Force map to recalculate size
+        // 强制地图重新计算大小
         formMap.invalidateSize();
     }, 100);
     
-    // Handle form submission
+    // 添加滚动指示器逻辑
+    const modalContent = modal.querySelector('.bg-white');
+    const scrollIndicator = modal.querySelector('.scroll-indicator');
+    
+    function checkScroll() {
+        if (modalContent.scrollHeight > modalContent.clientHeight) {
+            if (modalContent.scrollTop < 10) {
+                scrollIndicator.classList.remove('hidden');
+            } else if (modalContent.scrollTop + modalContent.clientHeight >= modalContent.scrollHeight - 20) {
+                scrollIndicator.classList.add('hidden');
+            }
+        } else {
+            scrollIndicator.classList.add('hidden');
+        }
+    }
+    
+    // 初始检查
+    setTimeout(checkScroll, 200);
+    
+    // 滚动时检查
+    modalContent.addEventListener('scroll', checkScroll);
+    
+    // 处理表单提交
     const form = document.getElementById('add-memory-form');
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Gather form data
+        // 收集表单数据
         const formData = new FormData(form);
         const memoryData = {
             title: formData.get('title'),
@@ -666,14 +691,14 @@ function showAddMemoryForm(submitCallback, cancelCallback) {
             tags: formData.get('tags').split(',').map(tag => tag.trim()).filter(tag => tag !== '')
         };
         
-        // Call the submit callback
+        // 调用提交回调
         submitCallback(memoryData);
         
-        // Remove the modal
+        // 移除模态
         document.body.removeChild(modal);
     });
     
-    // Handle cancel/close buttons
+    // 处理取消/关闭按钮
     document.getElementById('close-add-memory-btn').addEventListener('click', () => {
         document.body.removeChild(modal);
         if (cancelCallback) cancelCallback();

@@ -143,4 +143,7 @@
     .md\:p-8 {
       padding: 2rem;
     }
+    .md\:flex {
+      display: flex !important;
+    }
   }
